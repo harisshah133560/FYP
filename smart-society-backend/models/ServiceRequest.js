@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const serviceRequestSchema = new mongoose.Schema(
   {
+    // 🔹 Service Reference
     service: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Service",
@@ -26,18 +27,21 @@ const serviceRequestSchema = new mongoose.Schema(
       min: [0, "Price cannot be negative"],
     },
 
+    // 👤 Resident
     resident: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
+    // 👷 Worker
     assignedWorker: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
 
+    // 🔄 STATUS FLOW
     status: {
       type: String,
       enum: [
@@ -57,6 +61,7 @@ const serviceRequestSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // 🔐 OTP SYSTEM
     otp: {
       type: String,
       default: null,
@@ -69,21 +74,62 @@ const serviceRequestSchema = new mongoose.Schema(
       select: false,
     },
 
+    // ==============================
+    // 💳 PAYMENT SYSTEM
+    // ==============================
+
     isPaid: {
       type: Boolean,
       default: false,
     },
 
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "pending", "verified", "rejected"],
+      default: "unpaid",
+    },
+
     paymentMethod: {
       type: String,
-      enum: ["cash", "easypaisa", "jazzcash", null],
+      enum: ["cash", "easypaisa", "jazzcash"],
       default: null,
+    },
+
+    transactionId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    paymentProof: {
+      type: String, // (optional: for future image upload)
+      default: "",
     },
 
     paidAt: {
       type: Date,
       default: null,
     },
+
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+
+    paymentRejectionReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // ==============================
+    // 💰 EARNINGS
+    // ==============================
 
     adminEarning: {
       type: Number,
@@ -96,6 +142,10 @@ const serviceRequestSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Invalid amount"],
     },
+
+    // ==============================
+    // ⭐ RATING SYSTEM
+    // ==============================
 
     rating: {
       type: Number,
@@ -119,6 +169,9 @@ const serviceRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//
+// 🚀 INDEXES
+//
 serviceRequestSchema.index({ status: 1 });
 serviceRequestSchema.index({ resident: 1 });
 serviceRequestSchema.index({ assignedWorker: 1 });
@@ -129,15 +182,34 @@ serviceRequestSchema.index({ assignedWorker: 1, rating: -1 });
 serviceRequestSchema.index({ resident: 1, createdAt: -1 });
 serviceRequestSchema.index({ assignedWorker: 1, status: 1 });
 
-serviceRequestSchema.pre("save", function () {
-  if (this.status === "completed" && this.price >= 0) {
-    this.adminEarning = Number(this.price) * 0.2;
-    this.workerEarning = Number(this.price) * 0.8;
-  }
+// Payment indexes
+serviceRequestSchema.index({ paymentStatus: 1 });
+serviceRequestSchema.index({ isPaid: 1 });
+serviceRequestSchema.index({ paidAt: -1 });
 
+//
+// 🔥 MIDDLEWARE (SAFE LOGIC)
+//
+serviceRequestSchema.pre("save", function () {
+  // Clear OTP when job ends
   if (this.status === "completed" || this.status === "cancelled") {
     this.otp = null;
     this.otpExpires = null;
+  }
+
+  // Only run payment logic when paymentStatus changes
+  if (this.isModified("paymentStatus")) {
+    if (this.paymentStatus !== "verified") {
+      this.isPaid = false;
+      this.adminEarning = 0;
+      this.workerEarning = 0;
+    }
+
+    if (this.paymentStatus === "verified" && this.price >= 0) {
+      this.isPaid = true;
+      this.adminEarning = Number(this.price || 0) * 0.2;
+      this.workerEarning = Number(this.price || 0) * 0.8;
+    }
   }
 });
 

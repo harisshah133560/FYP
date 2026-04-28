@@ -16,6 +16,8 @@ import {
   addRating,
   getWorkerRatings,
   getPaymentReport,
+  verifyPaymentByAdmin,
+  rejectPaymentByAdmin,
 } from "../controllers/serviceController.js";
 
 import {
@@ -54,5 +56,8 @@ router.get("/", protect, isAdmin, getAllRequests);
 router.put("/:id/assign", protect, isAdmin, assignWorker);
 router.delete("/:id/delete", protect, isAdmin, deleteRequest);
 router.get("/payments/report", protect, isAdmin, getPaymentReport);
+router.get("/payments/report", protect, isAdmin, getPaymentReport);
+router.put("/:id/payment/verify", protect, isAdmin, verifyPaymentByAdmin);
+router.put("/:id/payment/reject", protect, isAdmin, rejectPaymentByAdmin);
 
 export default router;

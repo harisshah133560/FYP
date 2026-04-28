@@ -431,7 +431,7 @@ export const verifyOtp = async (req, res) => {
 };
 
 // ==============================
-// PAYMENT + COMMISSION
+// PAYMENT SUBMIT BY RESIDENT
 // ==============================
 export const makePayment = async (req, res) => {
   try {
@@ -453,50 +453,44 @@ export const makePayment = async (req, res) => {
       return res.status(400).json({ message: "Complete job first" });
     }
 
-    if (request.isPaid) {
+    if (request.paymentStatus === "verified" || request.isPaid) {
       return res.status(400).json({ message: "Already paid" });
     }
 
-    const method = req.body.method || "cash";
+    const { method, transactionId } = req.body;
+
     const allowedMethods = ["cash", "easypaisa", "jazzcash"];
 
-    if (!allowedMethods.includes(method)) {
+    if (!method || !allowedMethods.includes(method)) {
       return res.status(400).json({ message: "Invalid payment method" });
     }
 
-    const totalAmount = Number(request.price || 0);
-    const adminCommissionRate = 0.2;
-    const workerCommissionRate = 0.8;
+    if ((method === "easypaisa" || method === "jazzcash") && !transactionId) {
+      return res.status(400).json({
+        message: "Transaction ID is required for online payment",
+      });
+    }
 
-    const adminEarning = totalAmount * adminCommissionRate;
-    const workerEarning = totalAmount * workerCommissionRate;
-
-    request.isPaid = true;
     request.paymentMethod = method;
+    request.transactionId = transactionId ? transactionId.trim() : "";
+    request.paymentStatus = "pending";
+    request.isPaid = false;
     request.paidAt = Date.now();
-
-    // Commission calculation
-    request.adminEarning = adminEarning;
-    request.workerEarning = workerEarning;
+    request.verifiedAt = null;
+    request.rejectedAt = null;
+    request.paymentRejectionReason = "";
 
     await request.save();
 
     res.json({
-      message: "Payment successful",
+      message: "Payment submitted for admin verification",
       request,
-      paymentSummary: {
-        totalAmount,
-        paymentMethod: method,
-        adminCommissionRate: "20%",
-        workerCommissionRate: "80%",
-        adminEarning,
-        workerEarning,
-      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 // ==============================
 // ADMIN PAYMENT REPORT
 // ==============================
@@ -506,25 +500,131 @@ export const getPaymentReport = async (req, res) => {
       return res.status(403).json({ message: "Admin only" });
     }
 
-    const requests = await ServiceRequest.find({ isPaid: true })
+    const requests = await ServiceRequest.find({
+      paymentStatus: { $in: ["pending", "verified", "rejected"] },
+    })
       .populate("resident", "name email")
       .populate("assignedWorker", "name email")
+      .populate("service", "serviceType category subcategory price")
       .sort({ paidAt: -1 });
 
-    // Calculate totals
-    const totalRevenue = requests.reduce((sum, r) => sum + (r.price || 0), 0);
-    const totalAdminEarning = requests.reduce((sum, r) => sum + (r.adminEarning || 0), 0);
-    const totalWorkerEarning = requests.reduce((sum, r) => sum + (r.workerEarning || 0), 0);
+    const verifiedPayments = requests.filter(
+      (r) => r.paymentStatus === "verified"
+    );
+
+    const pendingPayments = requests.filter(
+      (r) => r.paymentStatus === "pending"
+    );
+
+    const rejectedPayments = requests.filter(
+      (r) => r.paymentStatus === "rejected"
+    );
+
+    const totalRevenue = verifiedPayments.reduce(
+      (sum, r) => sum + Number(r.price || 0),
+      0
+    );
+
+    const totalAdminEarning = verifiedPayments.reduce(
+      (sum, r) => sum + Number(r.adminEarning || 0),
+      0
+    );
+
+    const totalWorkerEarning = verifiedPayments.reduce(
+      (sum, r) => sum + Number(r.workerEarning || 0),
+      0
+    );
 
     res.json({
       summary: {
         totalRevenue,
         totalAdminEarning,
         totalWorkerEarning,
+        pendingCount: pendingPayments.length,
+        verifiedCount: verifiedPayments.length,
+        rejectedCount: rejectedPayments.length,
       },
       payments: requests,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// ==============================
+// ADMIN VERIFY PAYMENT
+// ==============================
+export const verifyPaymentByAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
 
+    const request = await ServiceRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.paymentStatus !== "pending") {
+      return res.status(400).json({ message: "Payment is not pending" });
+    }
+
+    const totalAmount = Number(request.price || 0);
+
+    request.paymentStatus = "verified";
+    request.isPaid = true;
+    request.verifiedAt = Date.now();
+    request.rejectedAt = null;
+    request.paymentRejectionReason = "";
+
+    request.adminEarning = totalAmount * 0.2;
+    request.workerEarning = totalAmount * 0.8;
+
+    await request.save();
+
+    res.json({
+      message: "Payment verified successfully",
+      request,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==============================
+// ADMIN REJECT PAYMENT
+// ==============================
+export const rejectPaymentByAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+
+    const { reason } = req.body;
+
+    const request = await ServiceRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.paymentStatus !== "pending") {
+      return res.status(400).json({ message: "Payment is not pending" });
+    }
+
+    request.paymentStatus = "rejected";
+    request.isPaid = false;
+    request.rejectedAt = Date.now();
+    request.paymentRejectionReason = reason || "Payment rejected by admin";
+    request.adminEarning = 0;
+    request.workerEarning = 0;
+
+    await request.save();
+
+    res.json({
+      message: "Payment rejected",
+      request,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
