@@ -20,6 +20,7 @@ import MyJobs from "./pages/worker/MyJobs";
 import Rating from "./pages/resident/Rating";
 
 import Reports from "./pages/admin/Reports";
+import AdminPayments from "./pages/admin/AdminPayments";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageServices from "./pages/admin/ManageServices";
 import CreateWorker from "./pages/admin/CreateWorker";
@@ -41,6 +42,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="assign" element={<AssignWorker />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="payments" element={<AdminPayments />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="services" element={<ManageServices />} />
           <Route path="create-worker" element={<CreateWorker />} />
