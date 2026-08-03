@@ -13,13 +13,22 @@ import serviceManagementRoutes from "./routes/serviceManagementRoutes.js";
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const allowedOrigins = FRONTEND_URL.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // ==============================
 // MIDDLEWARE
 // ==============================
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
   })
 );
