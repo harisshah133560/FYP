@@ -1,14 +1,18 @@
+
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import CreateRequest from "./CreateRequest";
 
 const ResidentDashboard = () => {
   const navigate = useNavigate();
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
-  // 🔐 Protect route
+  // Protect route
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("userInfo"));
@@ -21,13 +25,13 @@ const ResidentDashboard = () => {
     }
   }, [navigate]);
 
+  // Fetch resident requests
   const fetchRequests = async () => {
     try {
       setLoading(true);
 
       const res = await API.get("/requests/my");
       setRequests(Array.isArray(res.data) ? res.data : []);
-
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || "Failed to load requests");
@@ -40,22 +44,21 @@ const ResidentDashboard = () => {
     fetchRequests();
   }, []);
 
-  // 📊 Stats
-  const stats = useMemo(() => {
-    return {
-      total: requests.length,
-      pending: requests.filter(r => r.status === "pending").length,
-      assigned: requests.filter(r => r.status === "assigned").length,
-      inProgress: requests.filter(r => r.status === "in-progress").length,
-      completed: requests.filter(r => r.status === "completed").length,
-      paid: requests.filter(r => r.isPaid).length,
-    };
-  }, [requests]);
+  // Dashboard statistics
+  const stats = useMemo(() => ({
+    total: requests.length,
+    pending: requests.filter(r => r.status === "pending").length,
+    assigned: requests.filter(r => r.status === "assigned").length,
+    inProgress: requests.filter(r => r.status === "in-progress").length,
+    completed: requests.filter(r => r.status === "completed").length,
+    paid: requests.filter(r => r.isPaid).length,
+  }), [requests]);
 
-  // 📌 Recent requests
-  const recentRequests = useMemo(() => {
-    return [...requests].slice(0, 5);
-  }, [requests]);
+  // Recent requests
+  const recentRequests = useMemo(
+    () => requests.slice(0, 5),
+    [requests]
+  );
 
   if (loading) {
     return (
@@ -68,7 +71,8 @@ const ResidentDashboard = () => {
   return (
     <div className="p-4 md:p-6">
 
-      <div className="mb-8 flex justify-between items-center">
+      {/* Dashboard Header */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">
             Resident Dashboard
@@ -78,58 +82,66 @@ const ResidentDashboard = () => {
           </p>
         </div>
 
-        <button
-          onClick={fetchRequests}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          Refresh
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setShowRequestModal(true)}
+            className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white transition hover:bg-blue-700"
+          >
+            + Create New Request
+          </button>
+
+          <button
+            onClick={fetchRequests}
+            className="rounded-lg bg-gray-200 px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-300"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
-      {/* 📊 Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-5">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-6">
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Total</p>
           <p className="text-3xl font-bold text-indigo-600">{stats.total}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Pending</p>
           <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Assigned</p>
           <p className="text-3xl font-bold text-sky-600">{stats.assigned}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">In Progress</p>
           <p className="text-3xl font-bold text-purple-600">{stats.inProgress}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Completed</p>
           <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Paid</p>
           <p className="text-3xl font-bold text-emerald-600">{stats.paid}</p>
         </div>
 
       </div>
 
-      {/* 📌 Recent Requests */}
-      <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm">
-
-        <h2 className="text-lg font-semibold mb-4 text-gray-800">
+      {/* Recent Requests */}
+      <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold text-gray-800">
           Recent Requests
         </h2>
 
         {recentRequests.length === 0 ? (
-          <p className="text-gray-500 text-sm">
+          <p className="text-sm text-gray-500">
             No requests yet
           </p>
         ) : (
@@ -137,7 +149,7 @@ const ResidentDashboard = () => {
             {recentRequests.map((req) => (
               <div
                 key={req._id}
-                className="flex justify-between items-center border rounded-xl p-4"
+                className="flex items-center justify-between rounded-xl border p-4"
               >
                 <div>
                   <p className="font-medium text-gray-800">
@@ -149,7 +161,7 @@ const ResidentDashboard = () => {
                 </div>
 
                 <span
-                  className={`px-3 py-1 text-xs rounded-full font-medium capitalize ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
                     req.status === "pending"
                       ? "bg-yellow-100 text-yellow-700"
                       : req.status === "assigned"
@@ -167,8 +179,36 @@ const ResidentDashboard = () => {
             ))}
           </div>
         )}
-
       </div>
+
+      {/* Create Request Modal */}
+      {showRequestModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowRequestModal(false)}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setShowRequestModal(false)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-gray-100 p-2 text-gray-600 transition hover:bg-gray-200"
+              aria-label="Close modal"
+            >
+              <X size={22} />
+            </button>
+
+            <CreateRequest
+              onSuccess={() => {
+                setShowRequestModal(false);
+                fetchRequests();
+              }}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

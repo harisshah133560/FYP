@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-
+import { Toaster } from "react-hot-toast";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
@@ -30,6 +30,18 @@ import WorkerRatings from "./pages/admin/WorkerRatings";
 function App() {
   return (
     <Router>
+     {/* Global Toast Notifications */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+        }}
+      />
       <Routes>
 
         {/* Authentication */}

@@ -1,3 +1,4 @@
+
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
@@ -39,11 +40,14 @@ const WorkerLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-green-700 text-white p-5 shadow-lg">
-        <h2 className="mb-6 text-2xl font-bold">Worker Panel</h2>
+    <div className="flex h-screen overflow-hidden bg-gray-100">
+      {/* Sidebar */}
+      <aside className="flex w-64 shrink-0 flex-col overflow-y-auto bg-green-700 p-5 text-white shadow-lg">
+        <h2 className="mb-6 text-2xl font-bold">
+          Worker Panel
+        </h2>
 
-        <nav className="space-y-2">
+        <nav className="flex-1 space-y-2">
           <NavLink to="/worker/dashboard" className={linkClass}>
             Dashboard
           </NavLink>
@@ -55,13 +59,14 @@ const WorkerLayout = () => {
 
         <button
           onClick={handleLogout}
-          className="mt-10 w-full rounded-lg border border-red-300 px-3 py-2 text-left text-sm font-medium text-red-200 transition hover:bg-red-500 hover:text-white"
+          className="mt-6 w-full shrink-0 rounded-lg border border-red-300 px-3 py-2 text-left text-sm font-medium text-red-200 transition hover:bg-red-500 hover:text-white"
         >
           Logout
         </button>
       </aside>
 
-      <main className="flex-1 p-6">
+      {/* Main content */}
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6">
         <Outlet />
       </main>
     </div>
