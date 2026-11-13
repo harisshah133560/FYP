@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const ManageServices = () => {
   const [services, setServices] = useState([]);
@@ -27,7 +28,7 @@ const ManageServices = () => {
       setServices(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load services");
+      toast.error(error.response?.data?.message || "Failed to load services");
     } finally {
       setLoading(false);
     }
@@ -52,11 +53,11 @@ const ManageServices = () => {
     const price = Number(form.price);
 
     if (!serviceType || !category || !subcategory || !price) {
-      return alert("Please fill all fields");
+      return toast.error("Please fill all fields");
     }
 
     if (price < 0) {
-      return alert("Price must be positive");
+      return toast.error("Price must be positive");
     }
 
     const duplicate = services.find(
@@ -68,7 +69,7 @@ const ManageServices = () => {
     );
 
     if (duplicate) {
-      return alert("This service already exists");
+      return toast.error("This service already exists");
     }
 
     try {
@@ -81,7 +82,7 @@ const ManageServices = () => {
           subcategory,
           price,
         });
-        alert("Service updated successfully ✅");
+        toast.success("Service updated successfully ✅");
       } else {
         await API.post("/services", {
           serviceType,
@@ -89,14 +90,14 @@ const ManageServices = () => {
           subcategory,
           price,
         });
-        alert("Service added successfully ✅");
+        toast.success("Service added successfully ✅");
       }
 
       resetForm();
       fetchServices();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Operation failed");
+      toast.error(error.response?.data?.message || "Operation failed");
     } finally {
       setSaving(false);
     }
@@ -119,9 +120,10 @@ const ManageServices = () => {
       setDeletingId(id);
       await API.delete(`/services/${id}`);
       setServices((prev) => prev.filter((s) => s._id !== id));
+      toast.success("Service deleted successfully");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Delete failed");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }

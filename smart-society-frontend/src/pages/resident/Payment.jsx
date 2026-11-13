@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const Payment = () => {
   const { state } = useLocation();
@@ -13,13 +14,13 @@ const Payment = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
-    if (!method) return alert("Select payment method");
+    if (!method) return toast.error("Select payment method");
 
     if (
       (method === "jazzcash" || method === "easypaisa") &&
       !transactionId
     ) {
-      return alert("Enter transaction ID");
+      return toast.error("Enter transaction ID");
     }
 
     try {
@@ -30,11 +31,11 @@ const Payment = () => {
         transactionId,
       });
 
-      alert("Payment submitted! Waiting for admin approval ⏳");
+      toast.success("Payment submitted! Waiting for admin approval ⏳");
 
       navigate("/resident/my-requests");
     } catch (error) {
-      alert(error.response?.data?.message || "Payment failed");
+      toast.error(error.response?.data?.message || "Payment failed");
     } finally {
       setLoading(false);
     }

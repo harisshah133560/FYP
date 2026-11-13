@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const Workers = () => {
   const [workers, setWorkers] = useState([]);
@@ -27,7 +28,7 @@ const Workers = () => {
       setServices(Array.isArray(serviceRes.data) ? serviceRes.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load workers");
+      toast.error(error.response?.data?.message || "Failed to load workers");
     } finally {
       setLoading(false);
     }
@@ -40,11 +41,11 @@ const Workers = () => {
       setDeletingId(id);
       await API.delete(`/users/${id}`);
 
-      alert("Worker deleted successfully");
+      toast.success("Worker deleted successfully");
       fetchData();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Delete failed");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }
@@ -71,7 +72,7 @@ const Workers = () => {
     if (!editingWorker) return;
 
     if (selectedServices.length === 0) {
-      return alert("Select at least one service");
+      return toast.error("Select at least one service");
     }
 
     try {
@@ -81,13 +82,13 @@ const Workers = () => {
         services: selectedServices,
       });
 
-      alert("Worker updated successfully");
+      toast.success("Worker updated successfully");
 
       closeEditModal();
       fetchData();
     } catch (error) {
       console.error(error.response?.data || error);
-      alert(error.response?.data?.message || "Update failed");
+      toast.error(error.response?.data?.message || "Update failed");
     } finally {
       setUpdating(false);
     }

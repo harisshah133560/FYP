@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const MyJobs = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const MyJobs = () => {
       setJobs(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load jobs");
+      toast.error(error.response?.data?.message || "Failed to load jobs");
     }
   };
 
@@ -41,10 +42,10 @@ const MyJobs = () => {
       setLoadingId(id);
 
       await API.put(`/requests/${id}/status`, { status });
-
+      toast.success("Job status updated");
       fetchJobs();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to update job");
+      toast.error(error.response?.data?.message || "Failed to update job");
     } finally {
       setLoadingId(null);
     }
@@ -56,11 +57,11 @@ const MyJobs = () => {
 
       await API.post(`/requests/${id}/request-completion`); // ✅ FIXED
 
-      alert("OTP sent to resident 📩");
+      toast.success("OTP sent to resident 📩");
 
       fetchJobs();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to send OTP");
+      toast.error(error.response?.data?.message || "Failed to send OTP");
     } finally {
       setLoadingId(null);
     }
@@ -68,7 +69,7 @@ const MyJobs = () => {
 
   const verifyOtp = async (id) => {
     if (!otpInputs[id]) {
-      return alert("Enter OTP first");
+      return toast.error("Enter OTP first");
     }
 
     try {
@@ -78,11 +79,11 @@ const MyJobs = () => {
         otp: otpInputs[id],
       });
 
-      alert("Job completed ✅");
+      toast.success("Job completed ✅");
 
       fetchJobs();
     } catch (error) {
-      alert(error.response?.data?.message || "Invalid OTP");
+      toast.error(error.response?.data?.message || "Invalid OTP");
     } finally {
       setLoadingId(null);
     }

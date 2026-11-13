@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const AssignWorker = () => {
   const [requests, setRequests] = useState([]);
@@ -26,7 +27,7 @@ const AssignWorker = () => {
       setWorkers(Array.isArray(workerRes.data) ? workerRes.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load data");
+      toast.error(error.response?.data?.message || "Failed to load data");
     } finally {
       setLoadingData(false);
     }
@@ -53,7 +54,7 @@ const AssignWorker = () => {
     const workerId = selectedWorkers[requestId];
 
     if (!workerId) {
-      alert("Please select a worker first");
+      toast.error("Please select a worker first");
       return;
     }
 
@@ -65,7 +66,7 @@ const AssignWorker = () => {
 
       await API.put(`/requests/${requestId}/assign`, { workerId });
 
-      alert("Worker assigned successfully ✅");
+      toast.success("Worker assigned successfully ✅");
 
       setSelectedWorkers((prev) => ({
         ...prev,
@@ -75,7 +76,7 @@ const AssignWorker = () => {
       await fetchData();
     } catch (error) {
       console.error(error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to assign worker");
+      toast.error(error.response?.data?.message || "Failed to assign worker");
     } finally {
       setAssigningId(null);
     }
@@ -90,11 +91,11 @@ const AssignWorker = () => {
 
       await API.delete(`/requests/${id}/delete`);
 
-      alert("Deleted successfully 🗑️");
+      toast.success("Deleted successfully 🗑️");
       await fetchData();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Delete failed");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }

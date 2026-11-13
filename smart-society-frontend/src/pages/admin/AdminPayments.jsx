@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const AdminPayments = () => {
   const [data, setData] = useState(null);
@@ -19,7 +20,7 @@ const AdminPayments = () => {
       const res = await API.get("/requests/payments/report");
       setData(res.data);
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to load payments");
+      toast.error(error.response?.data?.message || "Failed to load payments");
     } finally {
       setLoading(false);
     }
@@ -30,10 +31,10 @@ const AdminPayments = () => {
 
     try {
       await API.put(`/requests/${id}/payment/verify`);
-      alert("Payment verified ✅");
+      toast.success("Payment verified ✅");
       fetchPayments();
     } catch (error) {
-      alert(error.response?.data?.message || "Verification failed");
+      toast.error(error.response?.data?.message || "Verification failed");
     }
   };
 
@@ -43,10 +44,10 @@ const AdminPayments = () => {
 
     try {
       await API.put(`/requests/${id}/payment/reject`, { reason });
-      alert("Payment rejected ❌");
+      toast.success("Payment rejected ❌");
       fetchPayments();
     } catch (error) {
-      alert(error.response?.data?.message || "Reject failed");
+      toast.error(error.response?.data?.message || "Reject failed");
     }
   };
 

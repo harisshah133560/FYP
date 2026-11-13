@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import {
   BarChart,
@@ -81,7 +82,7 @@ const Reports = () => {
         setWorkerRatings(Array.isArray(ratingsRes.data) ? ratingsRes.data : []);
       } catch (error) {
         console.error("Error fetching reports:", error);
-        alert(error.response?.data?.message || "Failed to load reports");
+        toast.error(error.response?.data?.message || "Failed to load reports");
       } finally {
         setLoading(false);
       }

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import toast from "react-hot-toast";
 import CreateRequest from "./CreateRequest";
 
 const ResidentDashboard = () => {
@@ -34,7 +35,7 @@ const ResidentDashboard = () => {
       setRequests(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load requests");
+      toast.error(error.response?.data?.message || "Failed to load requests");
     } finally {
       setLoading(false);
     }

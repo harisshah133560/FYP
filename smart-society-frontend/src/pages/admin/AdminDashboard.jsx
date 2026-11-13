@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import {
   Chart as ChartJS,
@@ -60,7 +61,7 @@ const AdminDashboard = () => {
         }));
       } catch (error) {
         console.error(error);
-        alert(error.response?.data?.message || "Failed to load dashboard");
+        toast.error(error.response?.data?.message || "Failed to load dashboard");
       } finally {
         setLoading(false);
       }

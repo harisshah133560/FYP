@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const Rating = () => {
   const [requests, setRequests] = useState([]);
@@ -26,13 +27,13 @@ const Rating = () => {
       setRequests(filtered);
     } catch (error) {
       console.error(error);
-      alert("Failed to load requests");
+      toast.error("Failed to load requests");
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedId) return alert("Select a service first");
-    if (rating === 0) return alert("Please select rating");
+    if (!selectedId) return toast.error("Select a service first");
+    if (rating === 0) return toast.error("Please select rating");
 
     try {
       setLoading(true);
@@ -42,7 +43,7 @@ const Rating = () => {
         review: feedback,
       });
 
-      alert("Rating submitted successfully ⭐");
+      toast.success("Rating submitted successfully ⭐");
 
       setRating(0);
       setFeedback("");
@@ -50,7 +51,7 @@ const Rating = () => {
 
       fetchCompletedRequests();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to submit rating");
+      toast.error(error.response?.data?.message || "Failed to submit rating");
     } finally {
       setLoading(false);
     }

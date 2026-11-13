@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/authService";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Login = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      return alert("Please fill all fields");
+      return toast.error("Please fill all fields");
     }
 
     setLoading(true);
@@ -31,6 +32,7 @@ const Login = () => {
       localStorage.setItem("userInfo", JSON.stringify(data));
 
       console.log("LOGIN SUCCESS:", data);
+      toast.success("Login successful!");
 
       // ✅ Role-based redirect (cleaner)
       switch (data.role) {
@@ -50,7 +52,7 @@ const Login = () => {
     } catch (error) {
       console.error("LOGIN ERROR:", error);
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
         error.message ||
         "Login failed ❌"

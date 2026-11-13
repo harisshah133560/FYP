@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const CreateWorker = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ const CreateWorker = () => {
       setServices(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Fetch services error:", error);
-      alert(error.response?.data?.message || "Failed to load services");
+      toast.error(error.response?.data?.message || "Failed to load services");
     } finally {
       setLoadingServices(false);
     }
@@ -81,19 +82,19 @@ const CreateWorker = () => {
     const password = formData.password;
 
     if (!name || !email || !password) {
-      return alert("Please fill all fields");
+      return toast.error("Please fill all fields");
     }
 
     if (!validateEmail(email)) {
-      return alert("Please enter a valid email address");
+      return toast.error("Please enter a valid email address");
     }
 
     if (password.length < 6) {
-      return alert("Password must be at least 6 characters");
+      return toast.error("Password must be at least 6 characters");
     }
 
     if (selectedServices.length === 0) {
-      return alert("Please select at least one service");
+      return toast.error("Please select at least one service");
     }
 
     try {
@@ -106,11 +107,11 @@ const CreateWorker = () => {
         services: selectedServices,
       });
 
-      alert("Worker created successfully ✅");
+      toast.success("Worker created successfully ✅");
       handleReset();
     } catch (error) {
       console.error("Create worker error:", error);
-      alert(error.response?.data?.message || "Failed to create worker");
+      toast.error(error.response?.data?.message || "Failed to create worker");
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -26,7 +27,7 @@ const MyRequests = () => {
       const res = await API.get("/requests/my");
       setRequests(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to load requests");
+      toast.error(error.response?.data?.message || "Failed to load requests");
     } finally {
       setLoading(false);
     }
@@ -36,21 +37,22 @@ const MyRequests = () => {
     if (!window.confirm("Cancel this request?")) return;
     try {
       await API.delete(`/requests/${id}/cancel`);
+      toast.success("Request cancelled successfully");
       fetchMyRequests();
     } catch (error) {
-      alert(error.response?.data?.message || "Cancel failed");
+      toast.error(error.response?.data?.message || "Cancel failed");
     }
   };
 
   // 💳 Payment
   const handlePayment = async () => {
-    if (!paymentMethod) return alert("Select payment method");
+    if (!paymentMethod) return toast.error("Select payment method");
 
     if (
       (paymentMethod === "jazzcash" || paymentMethod === "easypaisa") &&
       !transactionId
     ) {
-      return alert("Enter transaction ID");
+      return toast.error("Enter transaction ID");
     }
 
     try {
@@ -59,7 +61,7 @@ const MyRequests = () => {
         transactionId,
       });
 
-      alert("Payment submitted! Waiting for admin approval ⏳");
+      toast.success("Payment submitted! Waiting for admin approval ⏳");
 
       setSelectedRequest(null);
       setPaymentMethod("");
@@ -67,12 +69,12 @@ const MyRequests = () => {
 
       fetchMyRequests();
     } catch (error) {
-      alert(error.response?.data?.message || "Payment failed");
+      toast.error(error.response?.data?.message || "Payment failed");
     }
   };
 
   const submitRating = async () => {
-    if (!rating) return alert("Select rating");
+    if (!rating) return toast.error("Select rating");
 
     try {
       await API.post(`/requests/${ratingRequest._id}/rate`, {
@@ -80,7 +82,7 @@ const MyRequests = () => {
         review,
       });
 
-      alert("Rating submitted ⭐");
+      toast.success("Rating submitted ⭐");
 
       setRatingRequest(null);
       setRating(0);
@@ -88,7 +90,7 @@ const MyRequests = () => {
 
       fetchMyRequests();
     } catch (error) {
-      alert(error.response?.data?.message || "Rating failed");
+      toast.error(error.response?.data?.message || "Rating failed");
     }
   };
 

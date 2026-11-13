@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
+import toast from "react-hot-toast";
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -29,15 +30,15 @@ const ManageUsers = () => {
       setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to load users");
+      toast.error(error.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
   const deleteUser = async (id, role) => {
-    if (role === "admin") return alert("You cannot delete an admin");
-    if (id === currentUser._id) return alert("You cannot delete yourself");
+    if (role === "admin") return toast.error("You cannot delete an admin");
+    if (id === currentUser._id) return toast.error("You cannot delete yourself");
 
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -47,9 +48,10 @@ const ManageUsers = () => {
       await API.delete(`/users/${id}`);
 
       setUsers((prev) => prev.filter((user) => user._id !== id));
+      toast.success("User deleted successfully");
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Delete failed");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }

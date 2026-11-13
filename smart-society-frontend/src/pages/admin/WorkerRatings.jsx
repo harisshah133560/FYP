@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import API from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const WorkerRatings = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const WorkerRatings = () => {
       setWorkers(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("ERROR:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to load worker ratings");
+      toast.error(error.response?.data?.message || "Failed to load worker ratings");
       setWorkers([]);
     } finally {
       setLoading(false);
